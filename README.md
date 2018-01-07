@@ -10,6 +10,11 @@ This project consists of three AWS lambdas
 * The second reads from that queue and processes each event through a list of processors. The only current implementations are one processor writing to S3 and another one sending data to an Elasticsearch instance
 * The third lambda runs weekly and reduces the data in S3 to a single gzipped file
 
+Here is a small diagram
+
+![architecture](img/architecture.png)
+
+
 ## Requirements
 
 * node.js/npm
@@ -80,6 +85,10 @@ curl -u user:pass -X PUT 'https://YOUR_ES_CLUSTER:9243/_template/owntracks' -v -
 ```
 
 If you dont want to use an Elasticsearch cluster, just comment the lines out in the `.env.yaml` file.
+
+With ES up and running it is easy to create a dashboard like this
+
+![Kibana visualization](img/kibana.png)
 
 ### Install app on phone
 
