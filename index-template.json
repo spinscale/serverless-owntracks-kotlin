@@ -1,0 +1,17 @@
+{
+  "template": "owntracks*",
+  "settings": {
+    "number_of_shards": 1
+  },
+  "mappings": {
+    "location": {
+      "properties": {
+        "location": {
+          "type": "geo_point"
+        }
+      }
+    }
+  }
+}
+
+

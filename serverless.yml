@@ -1,0 +1,72 @@
+service: owntracks-kotlin
+
+provider:
+  name: aws
+  runtime: java8
+# you can overwrite defaults here
+#  stage: dev
+#  region: us-east-1
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "sqs:SendMessage"
+        - "sqs:ReceiveMessage"
+        - "sqs:DeleteMessage"
+        - "sqs:DeleteMessageBatch"
+        - "sqs:GetQueueUrl"
+      Resource: arn:aws:sqs:us-east-1:*:${file(./.env.yml):AWS_QUEUE}
+    - Effect: "Allow"
+      Action:
+        - "s3:PutObject"
+        - "s3:GetObject"
+        - "s3:DeleteObject"
+        - "s3:PutObjectAcl"
+      Resource: arn:aws:s3:::${file(./.env.yml):AWS_BUCKET}/*
+    - Effect: "Allow"
+      Action:
+        - "s3:ListBucket"
+      Resource: arn:aws:s3:::${file(./.env.yml):AWS_BUCKET}
+
+  environment:
+    BASIC_AUTH: ${file(./.env.yml):BASIC_AUTH}
+    ELASTIC_MESSAGE_PROCESSOR_HOST: ${file(.env.yml):ELASTIC_MESSAGE_PROCESSOR_HOST}
+    ELASTIC_MESSAGE_PROCESSOR_AUTH: ${file(.env.yml):ELASTIC_MESSAGE_PROCESSOR_AUTH}
+    AWS_BUCKET: ${file(./.env.yml):AWS_BUCKET}
+    AWS_QUEUE: ${file(./.env.yml):AWS_QUEUE}
+
+package:
+  artifact: build/distributions/owntracks.zip
+
+functions:
+  # receives a single location event and puts it into SQS
+  http:
+    handler: de.spinscale.http.Handler
+    events:
+      - http:
+          path: location
+          method: post
+  # reads a batch of SQS messages and writes them into S3 and to an elastic cluster
+  processor:
+    handler: de.spinscale.queue.Processor
+    memorySize: 1024
+    timeout: 60
+    events:
+      - schedule: rate(10 minutes)
+  # reads a full S3 directory of events and reduces to a single gzipped file per week
+  s3:
+    handler: de.spinscale.s3.Reducer
+    events:
+      # invoke every monday at 3am
+      - schedule: cron(0 3 ? * MON *)
+
+resources:
+  Resources:
+    queue:
+       Type: AWS::SQS::Queue
+       Properties:
+         QueueName: ${file(./.env.yml):AWS_QUEUE}
+    bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${file(./.env.yml):AWS_BUCKET}

@@ -1,0 +1,73 @@
+buildscript {
+    ext.kotlin_version = '1.2.10'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.1'
+    }
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven { url "http://dl.bintray.com/jetbrains/spek" }
+}
+
+apply plugin: "kotlin"
+
+compileKotlin {
+    kotlinOptions.jvmTarget = '1.8'
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+apply plugin: 'org.junit.platform.gradle.plugin'
+
+junitPlatform {
+    filters {
+        engines {
+            include 'spek'
+        }
+    }
+}
+
+dependencies {
+    testCompile 'org.jetbrains.spek:spek-api:1.1.5'
+    testCompile 'com.natpryce:hamkrest:1.4.2.0'
+    testCompile "com.nhaarman:mockito-kotlin-kt1.1:1.5.0"
+    testCompile "io.findify:s3mock_2.12:0.2.4"
+    testCompile 'org.slf4j:slf4j-api:1.7.25'
+    testCompile 'org.slf4j:slf4j-log4j12:1.7.25'
+
+    testRuntime "org.junit.platform:junit-platform-launcher:1.0.1"
+    testRuntime 'org.jetbrains.spek:spek-junit-platform-engine:1.1.5'
+
+    compile (
+        'com.amazonaws:aws-lambda-java-core:1.2.0',
+        'com.amazonaws:aws-lambda-java-log4j:1.0.0',
+        'com.fasterxml.jackson.jr:jackson-jr-objects:2.9.3',
+        'software.amazon.awssdk:s3:2.0.0-preview-7',
+        'software.amazon.awssdk:sqs:2.0.0-preview-7',
+        "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version",
+        "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    )
+}
+
+// Task for building the zip file for upload
+task buildZip(type: Zip) {
+    // set the base name of the zip file
+    baseName = "owntracks"
+    from compileKotlin
+    from processResources
+    into('lib') {
+        from configurations.runtime
+    }
+}
+
+assemble.dependsOn buildZip
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.1'
+}
