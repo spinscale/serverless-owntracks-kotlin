@@ -46,7 +46,7 @@ object ElasticsearchMessageProcessorSpec : Spek({
    "items": [
       {
          "index": {
-            "_index": "owntracks-2017", "_type": "location", "_id": "1234", "_version": 1,
+            "_index": "owntracks-2017", "_type": "_doc", "_id": "1234", "_version": 1,
             "result": "created",
             "_shards": { "total": 1, "successful": 1, "failed": 0 },
             "created": true,
@@ -98,7 +98,7 @@ class AssertingHttpHandler(val id : String, val expectedData : Map<String, Any?>
         wasCalled.set(true)
         assert.that(exchange.requestMethod, equalTo("PUT"))
         assert.that(exchange.requestHeaders.getFirst("Authorization"), equalTo("Basic abc"))
-        assert.that(exchange.requestURI.path, equalTo("/<owntracks-{now/d{YYYY}}>/location/_bulk"))
+        assert.that(exchange.requestURI.path, equalTo("/<owntracks-{now/d{YYYY}}>/_doc/_bulk"))
         val bodyAsString = exchange.requestBody.bufferedReader().use { it.readText() }
         assert.that(bodyAsString, containsSubstring("""{ "index": { "_id" : "${id}" } }"""))
         val map : Map<String, Any?> = JSON.std.mapFrom(bodyAsString.split("\n")[1])

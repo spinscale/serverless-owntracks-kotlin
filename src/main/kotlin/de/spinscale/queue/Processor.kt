@@ -20,6 +20,7 @@ import software.amazon.awssdk.services.sqs.model.DeleteMessageBatchRequestEntry
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest
 import software.amazon.awssdk.services.sqs.model.Message
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
+import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -168,7 +169,7 @@ class ElasticsearchMessageProcessor(
 
         HttpClients.createDefault().use { client ->
             // the index name resembles owntracks-{now/d{YYYY}}, so it becomes owntracks-2017
-            val host = "${host}/%3Cowntracks-%7Bnow%2Fd%7BYYYY%7D%7D%3E/location/_bulk"
+            val host = "${host}/%3Cowntracks-%7Bnow%2Fd%7BYYYY%7D%7D%3E/_doc/_bulk"
             val request = HttpPut(host)
             val sb = StringBuilder()
             messages.forEach { message ->
@@ -197,7 +198,7 @@ class ElasticsearchMessageProcessor(
                 sb.append("{ \"index\": { \"_id\" : \"${message.messageId()}\" } }\n").append(JSON.std.asString(map)).append("\n")
             }
             request.entity = StringEntity(sb.toString(), ContentType.APPLICATION_JSON)
-            request.addHeader("Authorization", "Basic ${authorizationHeader}")
+            request.addHeader("Authorization", "Basic $authorizationHeader")
             request.config = RequestConfig.custom()
                     .setConnectionRequestTimeout(10000)
                     .setConnectTimeout(10000)
@@ -206,8 +207,11 @@ class ElasticsearchMessageProcessor(
 
             val response = client.execute(request)
             logger.log("Response from sending bulk to elastic cluster: ${response.statusLine}\n")
-
             val responseBody = EntityUtils.toString(response.entity)
+            if (response.statusLine.statusCode >= 400) {
+                logger.log("Response body: '$responseBody'")
+            }
+
             val json : Map<String, Any> = JSON.std.mapFrom(responseBody)
             val hasErrors = json["errors"] as Boolean
             if (hasErrors) {
