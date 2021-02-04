@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.2.21'
+    ext.kotlin_version = '1.4.30'
     repositories {
         mavenCentral()
     }
@@ -11,8 +11,6 @@ buildscript {
 
 repositories {
     mavenCentral()
-    jcenter()
-    maven { url "http://dl.bintray.com/jetbrains/spek" }
 }
 
 apply plugin: "kotlin"
@@ -50,8 +48,8 @@ dependencies {
         'com.fasterxml.jackson.jr:jackson-jr-objects:2.9.3',
         'software.amazon.awssdk:s3:2.0.0-preview-7',
         'software.amazon.awssdk:sqs:2.0.0-preview-7',
-        "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version",
-        "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+        "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version",
+        'org.apache.httpcomponents:httpclient:4.5.13'
     )
 }
 
@@ -67,7 +65,3 @@ task buildZip(type: Zip) {
 }
 
 assemble.dependsOn buildZip
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.1'
-}

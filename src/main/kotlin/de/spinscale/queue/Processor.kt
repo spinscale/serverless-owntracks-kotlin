@@ -20,7 +20,6 @@ import software.amazon.awssdk.services.sqs.model.DeleteMessageBatchRequestEntry
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest
 import software.amazon.awssdk.services.sqs.model.Message
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
-import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.util.*
 
